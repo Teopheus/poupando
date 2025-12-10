@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poupando | Gestão Inteligente</title>
+    
+    <!-- Fontes e Ícones -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            /* Variáveis de Cores (Tema Claro Padrão) */
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg-body: #f1f5f9;
+            --bg-card: #ffffff;
+            --text-main: #0f172a;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --input-bg: #ffffff;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        /* Tema Escuro */
+        body.dark-mode {
+            --primary: #6366f1;
+            --primary-hover: #818cf8;
+            --bg-body: #0f172a;
+            --bg-card: #1e293b;
+            --text-main: #f8fafc;
+            --text-light: #94a3b8;
+            --border: #334155;
+            --input-bg: #0f172a;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+        }
+
+        * { box-sizing: border-box; outline: none; transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg-body);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1100px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        /* HEADER */
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+        }
+
+        .logo { font-size: 1.5rem; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 10px; }
+        .logo i { font-size: 1.8rem; }
+
+        .theme-toggle {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            width: 40px; height: 40px;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem;
+            box-shadow: var(--shadow);
+        }
+        .theme-toggle:hover { transform: scale(1.05); }
+
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 25px;
+        }
+
+        /* COLUNA DA ESQUERDA (DASHBOARD) */
+        .main-col { display: flex; flex-direction: column; gap: 25px; }
+
+        /* CARD DE INSIGHT (O CÉREBRO) */
+        .insight-card {
+            background: linear-gradient(135deg, #1e293b, #334155);
+            color: white;
+            padding: 30px;
+            border-radius: 24px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Variações de cor do Insight */
+        .insight-card.danger { background: linear-gradient(135deg, #7f1d1d, #ef4444); }
+        .insight-card.warning { background: linear-gradient(135deg, #78350f, #f59e0b); }
+        .insight-card.safe { background: linear-gradient(135deg, #064e3b, #10b981); }
+
+        .insight-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+        .insight-label { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; opacity: 0.9; font-weight: 700; }
+        
+        .daily-budget { 
+            font-size: 3.5rem; font-weight: 800; margin: 5px 0; 
+            letter-spacing: -1px; text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .days-left { 
+            font-size: 0.9rem; background: rgba(255,255,255,0.2); backdrop-filter: blur(5px);
+            padding: 6px 14px; border-radius: 20px; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 20px;
+        }
+
+        /* Barra de Progresso do Ciclo */
+        .progress-wrapper { display: flex; align-items: center; gap: 10px; font-size: 0.8rem; opacity: 0.9; }
+        .progress-container {
+            flex: 1;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            height: 8px;
+            overflow: hidden;
+        }
+        .progress-bar { height: 100%; background-color: #fff; width: 0%; border-radius: 10px; transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        .insight-msg { 
+            margin-top: 25px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.2); 
+            font-size: 1.05rem; line-height: 1.5; display: flex; align-items: center; gap: 12px; font-weight: 500;
+        }
+
+        /* ESTATÍSTICAS */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
+        
+        .stat-card {
+            background: var(--bg-card); padding: 20px; border-radius: 16px;
+            box-shadow: var(--shadow); border: 1px solid var(--border);
+            display: flex; flex-direction: column; justify-content: center;
+        }
+        
+        .stat-icon-wrapper { 
+            width: 36px; height: 36px; border-radius: 10px; 
+            display: flex; align-items: center; justify-content: center; margin-bottom: 10px; font-size: 1.1rem;
+        }
+        
+        .stat-title { font-size: 0.8rem; color: var(--text-light); font-weight: 600; margin-bottom: 4px; text-transform: uppercase; }
+        .stat-value { font-size: 1.25rem; font-weight: 700; color: var(--text-main); }
+
+        /* FORMULÁRIO */
+        .form-card {
+            background: var(--bg-card); padding: 25px; border-radius: 20px;
+            box-shadow: var(--shadow); border: 1px solid var(--border);
+        }
+        
+        .form-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; color: var(--text-main); }
+        
+        .input-group { margin-bottom: 15px; position: relative; }
+        .input-group label { display: block; font-size: 0.85rem; color: var(--text-light); margin-bottom: 6px; font-weight: 600; }
+        
+        input, select {
+            width: 100%; padding: 12px 15px; border-radius: 12px; border: 1px solid var(--border);
+            background: var(--input-bg); color: var(--text-main);
+            font-family: inherit; font-size: 0.95rem; transition: border 0.2s, box-shadow 0.2s;
+        }
+        input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+
+        /* Ícone dentro do input de valor */
+        .currency-input-wrapper { position: relative; }
+        .currency-symbol {
+            position: absolute; left: 15px; top: 50%; transform: translateY(-50%);
+            color: var(--text-light); font-weight: 600; font-size: 0.9rem;
+        }
+        #valor { padding-left: 40px; font-weight: 600; }
+
+        button.btn-add {
+            width: 100%; background: var(--primary); color: white; border: none;
+            padding: 14px; border-radius: 12px; font-weight: 600; cursor: pointer;
+            transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
+            font-size: 1rem; margin-top: 10px;
+            box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3);
+        }
+        button.btn-add:hover { transform: translateY(-2px); background: var(--primary-hover); box-shadow: 0 6px 10px -1px rgba(79, 70, 229, 0.4); }
+
+        /* COLUNA DA DIREITA (GRÁFICO E LISTA) */
+        .side-col { display: flex; flex-direction: column; gap: 25px; }
+
+        .chart-card {
+            background: var(--bg-card); padding: 25px; border-radius: 20px;
+            box-shadow: var(--shadow); border: 1px solid var(--border);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            min-height: 320px;
+        }
+        .chart-title { font-size: 1rem; font-weight: 700; color: var(--text-main); margin-bottom: 20px; width: 100%; text-align: left; }
+
+        .list-card {
+            background: var(--bg-card); padding: 25px; border-radius: 20px;
+            flex: 1; display: flex; flex-direction: column;
+            box-shadow: var(--shadow); border: 1px solid var(--border);
+            max-height: 600px;
+        }
+
+        .list-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border);
+        }
+        .list-title { font-size: 1rem; font-weight: 700; color: var(--text-main); }
+        
+        .list-actions { display: flex; gap: 5px; }
+        .filter-btn, .export-btn {
+            background: transparent; border: 1px solid var(--border); color: var(--text-light);
+            padding: 6px 10px; border-radius: 8px; cursor: pointer; font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+        .filter-btn:hover, .export-btn:hover { background: var(--border); color: var(--text-main); }
+        .filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* Botão de Deletar (Estilo Perigo) */
+        .filter-btn.danger { color: var(--danger); border-color: var(--danger); }
+        .filter-btn.danger:hover { background: var(--danger); color: white; }
+
+        .transactions-list { flex: 1; overflow-y: auto; padding-right: 5px; }
+        
+        /* Scrollbar customizada */
+        .transactions-list::-webkit-scrollbar { width: 6px; }
+        .transactions-list::-webkit-scrollbar-track { background: transparent; }
+        .transactions-list::-webkit-scrollbar-thumb { background-color: var(--border); border-radius: 10px; }
+
+        .empty-state {
+            text-align: center; padding: 40px 10px; color: var(--text-light);
+            display: flex; flex-direction: column; align-items: center; gap: 15px;
+        }
+        .empty-state i { font-size: 2.5rem; opacity: 0.3; }
+
+        .trans-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 0; border-bottom: 1px solid var(--border);
+            animation: slideIn 0.3s ease;
+        }
+        .trans-item:last-child { border-bottom: none; }
+
+        .trans-info { display: flex; align-items: center; gap: 15px; }
+        .trans-icon {
+            width: 42px; height: 42px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+        
+        .type-DESPESA_VARIAVEL { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+        .type-DESPESA_FIXA { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .type-RECEITA_SALARIO { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .type-RECEITA_EXTRA { background: rgba(79, 70, 229, 0.1); color: var(--primary); }
+
+        .trans-desc { font-weight: 600; font-size: 0.95rem; color: var(--text-main); margin-bottom: 2px;}
+        .trans-date { font-size: 0.75rem; color: var(--text-light); }
+        .trans-value { font-weight: 700; font-size: 1rem; }
+
+        /* TOAST NOTIFICATIONS */
+        #toast-container {
+            position: fixed; bottom: 20px; right: 20px; z-index: 1000;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .toast {
+            background: var(--bg-card); color: var(--text-main);
+            padding: 16px 20px; border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15); 
+            border-left: 5px solid;
+            display: flex; align-items: center; gap: 12px;
+            animation: slideInRight 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); min-width: 280px;
+        }
+        .toast.success { border-color: var(--success); }
+        .toast.error { border-color: var(--danger); }
+        .toast i { font-size: 1.3rem; }
+        
+        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideIn { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        @media (max-width: 900px) {
+            .grid-layout { grid-template-columns: 1fr; }
+            .daily-budget { font-size: 2.8rem; }
+        }
+    </style>
+</head>
+<body class="light-mode"> <!-- Padrão Light Mode -->
+
+    <div class="container">
+        
+        <!-- HEADER -->
+        <header class="app-header">
+            <div class="logo">
+                <i class="fa-solid fa-wallet"></i> Poupando
+            </div>
+            <button class="theme-toggle" onclick="toggleTheme()" title="Alternar Tema">
+                <i class="fa-regular fa-moon"></i>
+            </button>
+        </header>
+
+        <div class="grid-layout">
+            <!-- COLUNA PRINCIPAL -->
+            <div class="main-col">
+                
+                <!-- CARD DE SOBREVIVÊNCIA -->
+                <div id="insight-card" class="insight-card">
+                    <div class="insight-header">
+                        <div class="insight-label">Meta Diária Segura</div>
+                        <i class="fa-solid fa-bullseye" style="font-size: 1.5rem; opacity: 0.6;"></i>
+                    </div>
+                    <div class="daily-budget" id="meta-diaria">R$ ---</div>
+                    
+                    <div class="days-left" id="dias-restantes">
+                        <i class="fa-regular fa-clock"></i> Calculando ciclo...
+                    </div>
+                    
+                    <!-- Barra de Progresso do Ciclo -->
+                    <div class="progress-wrapper">
+                        <span>Progresso do Mês</span>
+                        <div class="progress-container">
+                            <div id="cycle-progress" class="progress-bar"></div>
+                        </div>
+                    </div>
+
+                    <div class="insight-msg">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <span id="insight-msg">Carregando inteligência financeira...</span>
+                    </div>
+                </div>
+
+                <!-- ESTATÍSTICAS RÁPIDAS -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon-wrapper" style="background: rgba(16, 185, 129, 0.1); color: var(--success);">
+                            <i class="fa-solid fa-piggy-bank"></i>
+                        </div>
+                        <div class="stat-title">Saldo Livre</div>
+                        <div class="stat-value" id="saldo" style="color: var(--success)">R$ ---</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon-wrapper" style="background: rgba(245, 158, 11, 0.1); color: var(--warning);">
+                            <i class="fa-solid fa-file-invoice"></i>
+                        </div>
+                        <div class="stat-title">Gastos Fixos</div>
+                        <div class="stat-value" id="gastos-fixos">R$ ---</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon-wrapper" style="background: rgba(239, 68, 68, 0.1); color: var(--danger);">
+                            <i class="fa-solid fa-fire-flame-curved"></i>
+                        </div>
+                        <div class="stat-title">Gastos Variáveis</div>
+                        <div class="stat-value" id="gastos-var" style="color: var(--danger)">R$ ---</div>
+                    </div>
+                </div>
+
+                <!-- FORMULÁRIO DE LANÇAMENTO -->
+                <div class="form-card">
+                    <div class="form-title">
+                        <i class="fa-solid fa-circle-plus" style="color: var(--primary)"></i> 
+                        Novo Lançamento
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px;">
+                        <div class="input-group">
+                            <label>Descrição</label>
+                            <input type="text" id="desc" placeholder="Ex: Mercado, Uber, Salário">
+                        </div>
+                        <div class="input-group">
+                            <label>Valor</label>
+                            <div class="currency-input-wrapper">
+                                <span class="currency-symbol">R$</span>
+                                <input type="number" id="valor" step="0.01" placeholder="0,00">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="input-group">
+                            <label>Categoria</label>
+                            <select id="tipo">
+                                <option value="DESPESA_VARIAVEL">💸 Gasto Variável</option>
+                                <option value="DESPESA_FIXA">📄 Conta Fixa</option>
+                                <option value="RECEITA_SALARIO">💰 Salário</option>
+                                <option value="RECEITA_EXTRA">✨ Renda Extra</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Data</label>
+                            <input type="date" id="data-transacao">
+                        </div>
+                    </div>
+
+                    <button class="btn-add" onclick="lancar()">REGISTRAR</button>
+                </div>
+            </div>
+
+            <!-- COLUNA LATERAL -->
+            <div class="side-col">
+                
+                <!-- GRÁFICO -->
+                <div class="chart-card">
+                    <div class="chart-title">Distribuição do Orçamento</div>
+                    <div style="height: 220px; width: 220px; position: relative;">
+                        <canvas id="budgetChart"></canvas>
+                        <!-- Texto no centro do gráfico -->
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; pointer-events: none;">
+                            <div style="font-size: 0.8rem; color: var(--text-light); font-weight: 600;">LIVRE</div>
+                            <div id="chart-percent" style="font-size: 1.5rem; font-weight: 700; color: var(--text-main);">0%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LISTA -->
+                <div class="list-card">
+                    <div class="list-header">
+                        <div class="list-title">Extrato</div>
+                        <div class="list-actions">
+                            <button class="filter-btn active" onclick="filtrar('TODOS')" title="Todos"><i class="fa-solid fa-list"></i></button>
+                            <button class="filter-btn" onclick="filtrar('ENTRADA')" title="Receitas"><i class="fa-solid fa-arrow-down"></i></button>
+                            <button class="filter-btn" onclick="filtrar('SAIDA')" title="Despesas"><i class="fa-solid fa-arrow-up"></i></button>
+                            <button class="export-btn" onclick="exportarCSV()" title="Baixar CSV"><i class="fa-solid fa-download"></i></button>
+                            <!-- BOTÃO DE REINICIAR (NOVO) -->
+                            <button class="filter-btn danger" onclick="reiniciarTudo()" title="Reiniciar Tudo"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                    
+                    <div id="lista-transacoes" class="transactions-list">
+                        <!-- Itens via JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Container de Notificações -->
+    <div id="toast-container"></div>
+
+    <script>
+        const API = 'http://localhost:8080/api';
+        let myChart = null;
+        let transacoesCache = []; // Guarda dados para filtrar sem chamar API
+        let filtroAtual = 'TODOS';
+
+        // Configuração inicial
+        document.getElementById('data-transacao').valueAsDate = new Date();
+
+        // Formatador de Moeda
+        const moneyFormatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+
+        const icons = {
+            'DESPESA_VARIAVEL': 'fa-cart-shopping',
+            'DESPESA_FIXA': 'fa-house',
+            'RECEITA_SALARIO': 'fa-money-bill-wave',
+            'RECEITA_EXTRA': 'fa-star'
+        };
+
+        // --- TEMA DARK/LIGHT ---
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const icon = document.querySelector('.theme-toggle i');
+            if (document.body.classList.contains('dark-mode')) {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            }
+            // Atualiza cor do gráfico se necessário
+            carregarDados(); 
+        }
+
+        // --- TOASTS ---
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            const icon = type === 'success' ? 'fa-check-circle' : 'fa-circle-exclamation';
+            const color = type === 'success' ? 'var(--success)' : 'var(--danger)';
+            
+            toast.innerHTML = `<i class="fa-solid ${icon}" style="color: ${color}"></i> <span>${message}</span>`;
+            
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // --- GRÁFICOS ---
+        function renderChart(fixo, variavel, saldo) {
+            const ctx = document.getElementById('budgetChart').getContext('2d');
+            if(myChart) myChart.destroy();
+
+            const dataSaldo = saldo > 0 ? saldo : 0;
+            
+            // Calcula porcentagem livre
+            const total = fixo + variavel + dataSaldo;
+            const percentLivre = total > 0 ? Math.round((dataSaldo / total) * 100) : 0;
+            document.getElementById('chart-percent').innerText = `${percentLivre}%`;
+
+            // Cores do gráfico baseadas no CSS
+            const style = getComputedStyle(document.body);
+            const cSuccess = style.getPropertyValue('--success').trim();
+            const cDanger = style.getPropertyValue('--danger').trim();
+            const cWarning = style.getPropertyValue('--warning').trim();
+            const cBg = document.body.classList.contains('dark-mode') ? '#1e293b' : '#ffffff';
+
+            myChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Fixo', 'Variável', 'Livre'],
+                    datasets: [{
+                        data: [fixo, variavel, dataSaldo],
+                        backgroundColor: [cWarning, cDanger, cSuccess],
+                        borderWidth: 4,
+                        borderColor: cBg,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    cutout: '75%',
+                    animation: { animateScale: true, animateRotate: true }
+                }
+            });
+        }
+
+        // --- LÓGICA PRINCIPAL ---
+        async function carregarDados() {
+            try {
+                // 1. Dashboard
+                const resDash = await fetch(API + '/dashboard');
+                const dash = await resDash.json();
+
+                document.getElementById('meta-diaria').innerText = moneyFormatter.format(dash.metaDiaria);
+                document.getElementById('dias-restantes').innerText = `${dash.diasAteSalario} dias até o pagamento`;
+                document.getElementById('insight-msg').innerText = dash.insight;
+                
+                document.getElementById('saldo').innerText = moneyFormatter.format(dash.saldo);
+                document.getElementById('gastos-fixos').innerText = moneyFormatter.format(dash.gastosFixos);
+                document.getElementById('gastos-var').innerText = moneyFormatter.format(dash.gastosVariaveis);
+
+                // Barra de Progresso
+                const totalDiasCiclo = 30; 
+                const diasPassados = Math.max(0, totalDiasCiclo - dash.diasAteSalario);
+                const porcentagem = (diasPassados / totalDiasCiclo) * 100;
+                document.getElementById('cycle-progress').style.width = `${porcentagem}%`;
+
+                // Cores do Card Insight
+                const card = document.getElementById('insight-card');
+                card.className = 'insight-card'; // Reset
+                if (dash.saldo < 0) card.classList.add('danger');
+                else if (dash.metaDiaria < 20) card.classList.add('warning');
+                else card.classList.add('safe');
+
+                renderChart(dash.gastosFixos, dash.gastosVariaveis, dash.saldo);
+
+                // 2. Transações
+                const resTrans = await fetch(API + '/transacoes');
+                transacoesCache = await resTrans.json();
+                renderizarLista();
+
+            } catch (error) {
+                console.error("Erro API:", error);
+                document.getElementById('insight-msg').innerText = "Servidor offline. Verifique o terminal.";
+                showToast("Erro de conexão", "error");
+            }
+        }
+
+        function filtrar(tipo) {
+            filtroAtual = tipo;
+            // Atualiza botões
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            renderizarLista();
+        }
+
+        function renderizarLista() {
+            const listContainer = document.getElementById('lista-transacoes');
+            
+            // Filtra localmente
+            let listaFiltrada = transacoesCache;
+            if (filtroAtual === 'ENTRADA') {
+                listaFiltrada = transacoesCache.filter(t => t.tipo.startsWith('RECEITA'));
+            } else if (filtroAtual === 'SAIDA') {
+                listaFiltrada = transacoesCache.filter(t => t.tipo.startsWith('DESPESA'));
+            }
+
+            if (listaFiltrada.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fa-regular fa-folder-open"></i>
+                        <p>Nenhuma movimentação encontrada.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const htmlLista = listaFiltrada.slice().reverse().map(t => {
+                const isDespesa = t.tipo.startsWith('DESPESA');
+                const corValor = isDespesa ? 'var(--danger)' : 'var(--success)';
+                const sinal = isDespesa ? '-' : '+';
+                const dateObj = new Date(t.data);
+                const dataFormatada = dateObj.toLocaleDateString('pt-BR', {day: '2-digit', month: 'short'});
+                
+                return `
+                <div class="trans-item">
+                    <div class="trans-info">
+                        <div class="trans-icon type-${t.tipo}">
+                            <i class="fa-solid ${icons[t.tipo]}"></i>
+                        </div>
+                        <div>
+                            <div class="trans-desc">${t.descricao}</div>
+                            <div class="trans-date">${dataFormatada} • ${t.tipo.replace('_', ' ')}</div>
+                        </div>
+                    </div>
+                    <div class="trans-value" style="color: ${corValor}">
+                        ${sinal} ${moneyFormatter.format(t.valor)}
+                    </div>
+                </div>
+                `;
+            }).join('');
+            
+            listContainer.innerHTML = htmlLista;
+        }
+
+        async function lancar() {
+            const desc = document.getElementById('desc').value;
+            const valor = document.getElementById('valor').value;
+            const tipo = document.getElementById('tipo').value;
+            const data = document.getElementById('data-transacao').value;
+
+            if(!desc || !valor || !data) {
+                showToast("Preencha todos os campos!", "error");
+                return;
+            }
+
+            const body = {
+                descricao: desc,
+                valor: parseFloat(valor),
+                tipo: tipo,
+                data: data
+            };
+
+            try {
+                const res = await fetch(API + '/transacoes', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(body)
+                });
+
+                if(res.ok) {
+                    document.getElementById('desc').value = '';
+                    document.getElementById('valor').value = '';
+                    document.getElementById('desc').focus();
+                    showToast("Lançamento registado com sucesso!");
+                    carregarDados();
+                } else {
+                    showToast("Erro ao salvar", "error");
+                }
+            } catch (e) {
+                showToast("Erro de conexão", "error");
+            }
+        }
+
+        function exportarCSV() {
+            if(transacoesCache.length === 0) return showToast("Sem dados para exportar", "error");
+            
+            let csvContent = "data:text/csv;charset=utf-8,Data,Descricao,Tipo,Valor\n";
+            transacoesCache.forEach(t => {
+                csvContent += `${t.data},${t.descricao},${t.tipo},${t.valor}\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "poupando_extrato.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // --- FUNÇÃO PARA APAGAR TUDO (NOVO) ---
+        async function reiniciarTudo() {
+            if(!confirm("Tem certeza que deseja apagar TODOS os lançamentos? Essa ação não pode ser desfeita.")) return;
+
+            try {
+                // Assume que existe um endpoint DELETE /api/transacoes
+                // Se não existir, vai cair no erro abaixo
+                const res = await fetch(API + '/transacoes', { method: 'DELETE' });
+                
+                if(res.ok) {
+                    showToast("Todos os lançamentos foram apagados.");
+                    carregarDados();
+                } else {
+                    // Se o backend não suportar DELETE (405 ou 404), avisamos o usuário
+                    showToast("Erro: Backend não suporta limpeza.", "error");
+                }
+            } catch (e) {
+                showToast("Erro de conexão com o servidor.", "error");
+            }
+        }
+
+        // Inicializar
+        carregarDados();
+    </script>
+</body>
+</html>
